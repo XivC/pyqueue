@@ -1,3 +1,3 @@
-INSERT INTO $name$
-    (id, updated_at, state)
-VALUES (?, ?, ?)
+UPDATE $name$
+    SET updated_at = ?, state = ?
+WHERE id = ?

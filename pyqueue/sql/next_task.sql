@@ -1,6 +1,6 @@
 SELECT
-       task
+       id, task
 FROM $name$ AS t_name
 WHERE id IN (
-    SELECT MIN(id) FROM $name$
+    SELECT MIN(id) FROM $name$ WHERE state = "QUEUED"
     )
