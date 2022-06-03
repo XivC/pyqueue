@@ -3,24 +3,24 @@ import pickle
 import datetime
 import os
 import threading
+import time
 
 from . import settings
 
 
 class Storage:
-    def __init__(self, name):
+    def __init__(self, queue, name):
         self.name = name
         self._connection = sqlite3.connect("pyqueue_default", check_same_thread=False)
         self._create_table()
+        self._queue = queue
+        threading.Thread(target=self._commit).start()
 
     def _commit(self):
-        pass
-        lock = threading.Lock()
-        '''
-        lock.acquire(blocking=True)
-        self._connection.commit()
-        lock.release()
-        '''
+        try:
+            self._connection.commit()
+        except sqlite3.OperationalError:
+            return
 
     def _execute(self, operation, bind=()):
         cursor = self._connection.cursor()
@@ -34,7 +34,9 @@ class Storage:
 
     def _create_table(self):
         self._execute('create', ())
-        self._connection.commit()
+        self._commit()
+        self._execute('delete_corrupted')
+        self._commit()
 
     def add_task(self, task):
         task = pickle.dumps(task)
@@ -58,4 +60,3 @@ class Storage:
         task_id = mb_task[0]
         task = pickle.loads(mb_task[1])
         return task_id, task
-

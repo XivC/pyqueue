@@ -10,10 +10,10 @@ class Queue:
     def __init__(self, max_threads=5, name=None):
         self._max_threads = max_threads
         self._name = name or f'q_{id(self)}'
-        self._storage = Storage(self._name)
         self._daemon = threading.Thread(target=self._runtime)
         self._tasks_threads = []
-        self._is_working = False
+        self.is_working = False
+        self._storage = Storage(self, self._name)
 
     def _remove_done_tasks(self):
         alive_threads = []
@@ -24,7 +24,6 @@ class Queue:
                 self._storage.update_state(task_id, settings.TASK_DONE)
         self._tasks_threads = alive_threads
 
-
     def _next_task(self):
         task_id, task = self._storage.next_task()
         if not task:
@@ -33,20 +32,21 @@ class Queue:
         self._storage.update_state(task_id, settings.TASK_EXECUTING)
         self._tasks_threads.append((task_id, task_thread))
         task_thread.start()
+        return task_id
 
     def _runtime(self):
-        while self._is_working:
+        while self.is_working:
             time.sleep(0.1)
             self._remove_done_tasks()
             if len(self._tasks_threads) < self._max_threads:
                 self._next_task()
 
     def start_daemon(self):
-        self._is_working = True
+        self.is_working = True
         self._daemon.start()
 
     def stop_daemon(self):
-        self._is_working = False
+        self.is_working = False
         print('Daemon stopped')
 
     def push_task(self, task: Task):

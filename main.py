@@ -1,6 +1,6 @@
 import pyqueue
 import time
-
+import random
 from pyqueue import task
 
 
@@ -10,11 +10,11 @@ class TestTask(pyqueue.Task):
 
     def execute(self):
         print(f'task {self.n} started')
-        time.sleep(5)
+        time.sleep(random.randint(1, 10))
         print(f'task {self.n} done')
 
 
-q = pyqueue.Queue()
+q = pyqueue.Queue(name='test')
 
 q.start_daemon()
 
@@ -23,3 +23,4 @@ for i in range(10):
     q.push_task(TestTask(i))
 
 time.sleep(20)
+q.stop_daemon()
